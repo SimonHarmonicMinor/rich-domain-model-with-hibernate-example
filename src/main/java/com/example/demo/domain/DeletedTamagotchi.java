@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ import lombok.Setter;
 @NoArgsConstructor(access = PROTECTED)
 @Getter
 @Setter(PRIVATE)
+@Table(name = "deleted_tamagotchi")
 class DeletedTamagotchi {
   @Id
   private UUID id;
