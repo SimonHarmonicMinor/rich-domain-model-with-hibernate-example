@@ -3,7 +3,7 @@ package com.example.demo.service;
 import com.example.demo.domain.Pocket;
 import com.example.demo.domain.command.TamagotchiCreateRequest;
 import com.example.demo.domain.command.TamagotchiUpdateRequest;
-import com.example.demo.repository.PocketRepository;
+import jakarta.persistence.EntityManager;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,24 +13,29 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PocketService {
 
-  private final PocketRepository pocketRepository;
+  private final EntityManager em;
 
   @Transactional
   public UUID createPocket(String name) {
-    return pocketRepository.save(
-        Pocket.newPocket(name)
-    ).getId();
+    Pocket pocket = Pocket.newPocket(name);
+    em.persist(pocket);
+    return pocket.getId();
   }
 
   @Transactional
   public UUID createTamagotchi(UUID pocketId, TamagotchiCreateRequest request) {
-    Pocket pocket = pocketRepository.findById(pocketId).orElseThrow();
+    Pocket pocket = em.find(Pocket.class, pocketId);
     return pocket.createTamagotchi(request);
   }
 
   @Transactional
   public void updateTamagotchi(UUID tamagotchiId, TamagotchiUpdateRequest request) {
-    Pocket pocket = pocketRepository.findByTamagotchiId(tamagotchiId).orElseThrow();
+    Pocket pocket = em.createQuery(
+            "SELECT p FROM Pocket p LEFT JOIN p.tamagotchis t WHERE t.id = :tamagotchiId",
+            Pocket.class
+        )
+        .setParameter("tamagotchiId", tamagotchiId)
+        .getSingleResult();
     pocket.updateTamagotchi(tamagotchiId, request);
   }
 }
