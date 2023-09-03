@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -29,6 +30,7 @@ import lombok.Setter;
 public class Pocket {
 
   @Id
+  @Getter
   private UUID id;
 
   private String name;
