@@ -4,12 +4,14 @@ import static com.example.demo.domain.Status.CREATED;
 import static com.example.demo.domain.Status.PENDING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 import static org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED;
 
 import com.example.demo.domain.Pocket;
 import com.example.demo.domain.command.TamagotchiCreateRequest;
 import com.example.demo.domain.command.TamagotchiUpdateRequest;
+import com.example.demo.domain.exception.TamagotchiNameInvalidException;
 import com.example.demo.dto.PocketDto;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,10 +91,12 @@ class PocketServiceIntegrationTest {
         new TamagotchiCreateRequest("my tamagotchi", CREATED)
     );
 
+    System.out.println("SQL----");
     pocketService.updateTamagotchi(
         tamagotchiId,
         new TamagotchiUpdateRequest("another tamagotchi", PENDING)
     );
+    System.out.println("SQL----");
 
     PocketDto dto = transactionTemplate.execute(
         s -> em.find(Pocket.class, pocketId).toDto()
@@ -103,5 +107,24 @@ class PocketServiceIntegrationTest {
                 && t.status().equals(PENDING)
                 && t.id().equals(tamagotchiId)
         );
+  }
+
+  @Test
+  void shouldUpdateTamagotchiIfThereAreMultipleOnes() {
+    UUID pocketId = pocketService.createPocket("New pocket");
+    UUID tamagotchiId = pocketService.createTamagotchi(
+        pocketId,
+        new TamagotchiCreateRequest("Cat", CREATED)
+    );
+    pocketService.createTamagotchi(
+        pocketId,
+        new TamagotchiCreateRequest("Dog", CREATED)
+    );
+
+    System.out.println("SQL----");
+    assertThrows(
+        TamagotchiNameInvalidException.class,
+        () -> pocketService.updateTamagotchi(tamagotchiId, new TamagotchiUpdateRequest("Dog", CREATED))
+    );
   }
 }
